@@ -14,13 +14,11 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
-
 /**
  * A helper class for running LLM inference with a persistent session.
  */
 class LlmInferenceModel(
     private val context: Context,
-    private val modelPath: String,
     private val maxTokens: Int = 256,
     private val topK: Int = 40,
     private val temperature: Float = 0.7f,
@@ -33,9 +31,12 @@ class LlmInferenceModel(
     private var requestId: Int = 0
 
     init {
-        // Ensure model file exists
-        require(File(modelPath).exists()) { "Model file not found at $modelPath" }
+        val modelFile = File(context.filesDir, "gemma3-1b-it-int4.task")
+        val modelPath = modelFile.absolutePath
 
+        // Ensure model file exists
+        require(modelFile.exists()) { "Model file not found at $modelPath" }
+        
         // Build engine options
         val optionsBuilder = LlmInference.LlmInferenceOptions.builder()
             .setModelPath(modelPath)

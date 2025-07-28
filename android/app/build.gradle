@@ -124,7 +124,9 @@ android {
     }
     packagingOptions {
         jniLibs {
-            useLegacyPackaging true
+            // useLegacyPackaging true
+            useLegacyPackaging (findProperty('expo.useLegacyPackaging')?.toBoolean() ?: false)
+
         }
     }
     androidResources {

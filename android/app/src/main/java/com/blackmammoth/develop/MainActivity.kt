@@ -14,8 +14,6 @@ import com.llmmediapipe.InferenceListener
 
 import expo.modules.ReactActivityDelegateWrapper
 
-import java.io.File
-
 class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     // Set the theme to AppTheme BEFORE onCreate to support
@@ -31,11 +29,8 @@ class MainActivity : ReactActivity() {
      * A simple test function to verify LLM inference.
      */
     private fun testLlmModel() {
-        // Assume the model file is placed in app's files directory
-        val modelFile = File(filesDir, "gemma3-1b-it-int4.task").absolutePath
         val llmModel = LlmInferenceModel(
             context = this,
-            modelPath = modelFile,
             maxTokens = 128,
             topK = 40,
             temperature = 0.7f,
