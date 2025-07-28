@@ -14,28 +14,11 @@ import java.io.FileOutputStream
 class LlmInferenceModule(private val reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
 
-  // private var nextHandle = 1
-  // private val modelMap = mutableMapOf<Int, LlmInferenceModel>()
-
   private var llmInferenceModel: LlmInferenceModel? = null
 
   override fun getName(): String {
     return "LlmInferenceModule"
   }
-
-  // private class InferenceModelListener(
-  //   private val module: LlmInferenceModule,
-  //   private val handle: Int
-  // ) : InferenceListener {
-  //   override fun logging(model: LlmInferenceModel, message: String) {
-  //     module.emitEvent(
-  //       "logging",
-  //       Arguments.createMap().apply {
-  //         this.putInt("handle", this@InferenceModelListener.handle)
-  //         this.putString("message", message)
-  //       }
-  //     )
-  //   }
 
     private class InferenceModelListener(
     private val module: LlmInferenceModule,
@@ -48,28 +31,6 @@ class LlmInferenceModule(private val reactContext: ReactApplicationContext) :
         }
       )
     }
-
-    // override fun onError(model: LlmInferenceModel, requestId: Int, error: String) {
-    //   module.emitEvent(
-    //     "onErrorResponse",
-    //     Arguments.createMap().apply {
-    //       this.putInt("handle", this@InferenceModelListener.handle)
-    //       this.putInt("requestId", requestId)
-    //       this.putString("error", error)
-    //     }
-    //   )
-    // }
-
-    // override fun onResults(model: LlmInferenceModel, requestId: Int, response: String) {
-    //   module.emitEvent(
-    //     "onPartialResponse",
-    //     Arguments.createMap().apply {
-    //       this.putInt("handle", this@InferenceModelListener.handle)
-    //       this.putInt("requestId", requestId)
-    //       this.putString("response", response)
-    //     }
-    //   )
-    // }
 
     override fun onError(model: LlmInferenceModel, requestId: Int, error: String) {
       module.emitEvent(
@@ -93,37 +54,8 @@ class LlmInferenceModule(private val reactContext: ReactApplicationContext) :
     }
   }
 
-  // @ReactMethod
-  // fun createModel(
-  //   modelPath: String,
-  //   maxTokens: Int,
-  //   topK: Int,
-  //   temperature: Double,
-  //   randomSeed: Int,
-  //   promise: Promise
-  // ) {
-  //   try {
-  //     val modelHandle = nextHandle++
-  //     val model =
-  //       LlmInferenceModel(
-  //         this.reactContext,
-  //         modelPath,
-  //         maxTokens,
-  //         topK,
-  //         temperature.toFloat(),
-  //         randomSeed,
-  //         inferenceListener = InferenceModelListener(this, modelHandle)
-  //       )
-  //     modelMap[modelHandle] = model
-  //     promise.resolve(modelHandle)
-  //   } catch (e: Exception) {
-  //     promise.reject("Model Creation Failed", e.localizedMessage)
-  //   }
-  // }
-
   @ReactMethod
   fun createModel(
-    modelPath: String,
     maxTokens: Int,
     topK: Int,
     temperature: Double,
@@ -134,7 +66,6 @@ class LlmInferenceModule(private val reactContext: ReactApplicationContext) :
       llmInferenceModel =
         LlmInferenceModel(
           this.reactContext,
-          modelPath,
           maxTokens,
           topK,
           temperature.toFloat(),
