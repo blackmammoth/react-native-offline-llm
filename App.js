@@ -3,7 +3,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import useLLMInference from './lib/useLLMInference';
 
 export default function App() {
-  const test = useLLMInference({modelPath: "/sad/sad"})
+  const llmInference = useLLMInference();
+
   return (
     <View style={styles.container}>
       <Text>Open up App.js start working on your app!</Text>
