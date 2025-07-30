@@ -8,6 +8,14 @@
     "ios": "expo run:ios",
     "web": "expo start --web"
   },
+  "codegenConfig": {
+    "name": "NativeLlmMediapipe",
+    "type": "modules",
+    "jsSrcsDir": "specs",
+    "android": {
+      "javaPackageName": "com.nativellmmediapipe"
+    }
+  },
   "dependencies": {
     "expo": "~53.0.20",
     "expo-status-bar": "~2.2.3",
@@ -16,7 +24,9 @@
     "expo-dev-client": "~5.2.4"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "typescript": "~5.8.3",
+    "@types/react": "~19.0.10"
   },
   "private": true
 }

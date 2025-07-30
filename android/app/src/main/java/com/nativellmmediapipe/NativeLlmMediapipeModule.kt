@@ -1,4 +1,4 @@
-package com.llmmediapipe
+package com.nativellmmediapipe
 
 import android.content.Context
 import com.facebook.react.bridge.Arguments
@@ -11,17 +11,19 @@ import com.facebook.react.modules.core.DeviceEventManagerModule
 import java.io.File
 import java.io.FileOutputStream
 
-class LlmInferenceModule(private val reactContext: ReactApplicationContext) :
-  ReactContextBaseJavaModule(reactContext) {
+import android.util.Log
+
+import com.nativellmmediapipe.NativeLlmMediapipeSpec
+
+class NativeLlmMediapipeModule(private val reactContext: ReactApplicationContext) :
+  NativeLlmMediapipeSpec(reactContext) {
 
   private var llmInferenceModel: LlmInferenceModel? = null
 
-  override fun getName(): String {
-    return "LlmInferenceModule"
-  }
+  override fun getName() = NAME
 
-    private class InferenceModelListener(
-    private val module: LlmInferenceModule,
+  private class InferenceModelListener(
+    private val module: NativeLlmMediapipeModule,
   ) : InferenceListener {
     override fun logging(model: LlmInferenceModel, message: String) {
       module.emitEvent(
@@ -54,24 +56,31 @@ class LlmInferenceModule(private val reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
-  fun createModel(
-    maxTokens: Int,
-    topK: Int,
+  override fun createModel(
+    maxTokens: Double,
+    topK: Double,
     temperature: Double,
-    randomSeed: Int,
+    randomSeed: Double,
     promise: Promise
   ) {
+
+  if (llmInferenceModel != null) {
+    Log.d("LlmTest", "Model already created")
+    promise.resolve("Model already created")
+    return
+  }
+
     try {
       llmInferenceModel =
         LlmInferenceModel(
           this.reactContext,
-          maxTokens,
-          topK,
+          maxTokens.toInt(),
+          topK.toInt(),
           temperature.toFloat(),
-          randomSeed,
+          randomSeed.toInt(),
           inferenceListener = InferenceModelListener(this)
         )
+        Log.d("LlmTest", "***New Model Created!***")
       promise.resolve("Model Creation Successful")
     } catch (e: Exception) {
       promise.reject("Model Creation Failed", e.localizedMessage)
@@ -80,25 +89,32 @@ class LlmInferenceModule(private val reactContext: ReactApplicationContext) :
 
 
   // close session instead of releasing model
-  @ReactMethod
-  fun closeSession(promise: Promise) {
+  override fun closeSession(promise: Promise) {
+    llmInferenceModel?.closeSession()
+    llmInferenceModel = null // Help GC reclaim the object
     promise.resolve(true)
   }
 
-  @ReactMethod
-  fun generateResponse(requestId: Int, prompt: String) {
-    llmInferenceModel?.generateResponseAsync(requestId, prompt)  
+  override fun generateResponse(requestId: Double, prompt: String) {
+    llmInferenceModel?.generateResponseAsync(requestId.toInt(), prompt)  
   }
 
-  @ReactMethod
-  fun addListener(eventName: String?) {
+  override fun addListener(eventName: String?) {
     /* Required for RN built-in Event Emitter Calls. */
   }
 
-  @ReactMethod
-  fun removeListeners(count: Int?) {
+  override fun removeListeners(count: Double) {
     /* Required for RN built-in Event Emitter Calls. */
   }
+
+  override fun onCatalystInstanceDestroy() {
+  llmInferenceModel?.apply {
+    closeSession()        // Close the Mediapipe session
+    // If LlmInference has a close() or release() method, call it here too
+  }
+  llmInferenceModel = null // Help GC reclaim the object
+  super.onCatalystInstanceDestroy()
+}
 
   private fun copyFileToInternalStorageIfNeeded(modelName: String, context: Context): File {
     val outputFile = File(context.filesDir, modelName)
@@ -129,5 +145,9 @@ class LlmInferenceModule(private val reactContext: ReactApplicationContext) :
     reactContext
       .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
       .emit(eventName, eventData)
+  }
+
+  companion object {
+    const val NAME = "NativeLlmMediapipe"
   }
 }

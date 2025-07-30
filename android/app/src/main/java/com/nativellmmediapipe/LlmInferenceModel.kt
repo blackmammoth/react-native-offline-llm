@@ -1,4 +1,4 @@
-package com.llmmediapipe
+package com.nativellmmediapipe
 
 import android.content.Context
 import android.util.Log
@@ -89,7 +89,7 @@ class LlmInferenceModel(
      */
     fun closeSession() {
         session.close()
-        Log.d("LlmInferenceModel", "Session reset")
+        Log.d("LlmTest", "Session reset")
     }
 
     /**
