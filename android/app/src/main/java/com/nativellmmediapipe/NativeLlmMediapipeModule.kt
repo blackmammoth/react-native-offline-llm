@@ -95,8 +95,8 @@ class NativeLlmMediapipeModule(private val reactContext: ReactApplicationContext
     promise.resolve(true)
   }
 
-  override fun generateResponse(requestId: Double, prompt: String) {
-    llmInferenceModel?.generateResponseAsync(requestId.toInt(), prompt)  
+  override fun generateResponse(requestId: Double, prompt: String, promise: Promise) {
+    llmInferenceModel?.generateResponseAsync(requestId.toInt(), prompt, promise)
   }
 
   override fun addListener(eventName: String?) {

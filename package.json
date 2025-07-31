@@ -17,16 +17,19 @@
     }
   },
   "dependencies": {
+    "@expo/vector-icons": "^14.1.0",
     "expo": "~53.0.20",
+    "expo-dev-client": "~5.2.4",
+    "expo-linear-gradient": "~14.1.5",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
     "react-native": "0.79.5",
-    "expo-dev-client": "~5.2.4"
+    "react-native-safe-area-context": "^5.5.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
-    "typescript": "~5.8.3",
-    "@types/react": "~19.0.10"
+    "@types/react": "~19.0.10",
+    "typescript": "~5.8.3"
   },
   "private": true
 }

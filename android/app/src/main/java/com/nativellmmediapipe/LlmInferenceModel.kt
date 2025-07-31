@@ -30,6 +30,8 @@ class LlmInferenceModel(
     private var session: LlmInferenceSession
     private var requestId: Int = 0
 
+    private var requestContent: String = ""
+
     init {
         val modelFile = File(context.filesDir, "gemma3-1b-it-int4.task")
         val modelPath = modelFile.absolutePath
@@ -42,8 +44,7 @@ class LlmInferenceModel(
             .setModelPath(modelPath)
             .setMaxTokens(maxTokens)
             .setPreferredBackend(LlmInference.Backend.GPU)
-        // Optionally set seed if supported
-        // if (randomSeed != 0) optionsBuilder.setSeed(randomSeed)
+
         val options = optionsBuilder.build()
 
         // Create engine and initial session
@@ -71,15 +72,18 @@ class LlmInferenceModel(
     /**
      * Launches an async generation of the given prompt.
      */
-    fun generateResponseAsync(requestId: Int, prompt: String) {
+    fun generateResponseAsync(requestId: Int, prompt: String, promise: Promise) {
         this.requestId = requestId
         session.addQueryChunk(prompt)
         session.generateResponseAsync { partialResult, done ->
             if (!done) {
-                inferenceListener?.logging(this, partialResult)
+                inferenceListener?.onResults(this, requestId, partialResult)
+                requestContent += partialResult
             } else {
                 // Final result received
-                inferenceListener?.onResults(this, requestId, partialResult)
+                // inferenceListener?.onResults(this, requestId, partialResult)
+                Log.d("LlmTest", "/// Request $requestId completed with response: $requestContent ///")
+                promise.resolve(requestContent)
             }
         }
     }

@@ -31,7 +31,7 @@ export interface Spec extends TurboModule {
    * @param requestId Unique request identifier.
    * @param prompt    The text prompt to send.
    */
-  generateResponse(requestId: number, prompt: string): void;
+  generateResponse(requestId: number, prompt: string): Promise<void>;
 
   /**
    * Subscribes to native events.
@@ -44,6 +44,7 @@ export interface Spec extends TurboModule {
    * Removes all native event listeners for this module.
    * @param count Number of listeners to remove.
    */
+  // ? What is the purpose of this method?
   removeListeners(count: number): void;
 }
 
