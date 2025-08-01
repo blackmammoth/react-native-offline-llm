@@ -1,4 +1,3 @@
-import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
 import useLLMInference from "./lib/useLLMInference";
@@ -6,15 +5,14 @@ import Chat from "./components/Chat";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function App() {
-  const llm = useLLMInference();
+  const { isLoaded, generateResponse } = useLLMInference();
   // // Todo: Prepare a text input field for user to enter text and a button to submit the text and a box to get the response
   // // // Todo: Use loading spinner to indicate model loading
 
-  // Todo: Do I even need promises for this stuff? If not, then remove them. If needed, make the promise 
+  // // Todo: Do I even need promises for this stuff? If not, then remove them. If needed, make the promise 
   // interface more clear and consistent
 
-
-  if (!llm.isLoaded) {
+  if (!isLoaded) {
     return (
       <SafeAreaProvider>
         {" "}
@@ -28,7 +26,7 @@ export default function App() {
   }
 
   // // Todo: There are multiple listeners being fired. Fix
-  // Todo: In the first run, only the final response is recieved with no streaming. In the second run and after, streaming works.
+  // // Todo: In the first run, only the final response is recieved with no streaming. In the second run and after, streaming works.
 
   // Todo: close session of the model when the user exits the app
 
@@ -53,7 +51,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <Chat llm={llm} />
+      <Chat generateResponse={generateResponse} />
     </SafeAreaProvider>
   );
 }

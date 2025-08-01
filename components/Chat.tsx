@@ -21,7 +21,6 @@ interface Message {
 }
 
 type LLM = {
-  isLoaded: boolean;
   generateResponse: (
     prompt: string,
     onPartial?: (partial: string, requestId: number | undefined) => void,
@@ -29,7 +28,7 @@ type LLM = {
   ) => Promise<string>;
 };
 
-const Chat: React.FC = ({ llm }: { llm: LLM }) => {
+const Chat: React.FC = ({ generateResponse }: LLM) => {
   const insets = useSafeAreaInsets();
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -52,7 +51,7 @@ const Chat: React.FC = ({ llm }: { llm: LLM }) => {
     setLoading(true);
 
     try {
-      const result = await llm.generateResponse(
+      const result = await generateResponse(
         text,
         // Callback to handle partial responses
         (newPartial, requestId) => {
@@ -92,21 +91,22 @@ const Chat: React.FC = ({ llm }: { llm: LLM }) => {
       keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
     >
       <SafeAreaView style={styles.innerContainer}>
-        {messages.length === 0 ? (
-          <View style={styles.placeholderContainer}>
-            <Text style={styles.placeholderText}>
-              Incoming messages will appear here....
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.messagesContainer}>
-            {partial ? (
-              <View style={styles.messageBubble}>
-                <Text style={styles.messageText}>{partial}</Text>
-              </View>
-            ) : null}
-          </View>
-        )}
+        <View style={styles.messagesContainer}>
+          {/* placeholder only if no messages AND no streaming in progress */}
+          {messages.length === 0 && !partial && (
+            <View style={styles.placeholderContainer}>
+              <Text style={styles.placeholderText}>
+                Incoming messages will appear here....
+              </Text>
+            </View>
+          )}
+
+          {partial !== "" && (
+            <View style={styles.messageBubble}>
+              <Text style={styles.messageText}>{partial}</Text>
+            </View>
+          )}
+        </View>
 
         <View style={[styles.inputContainer, { paddingBottom: insets.bottom }]}>
           <TextInput

@@ -35,26 +35,34 @@ export default function useLLMInference() {
       onPartial: (partial: string, requestId: number) => void,
       onError: (error: string, requestId: number) => void
     ): Promise<generateResponseType> => {
-      const requestId = 1
+      const requestId = 1;
 
-      eventEmitter.addListener("onPartialResponse", (evt) => {
-        if (evt.requestId === requestId) {
-          onPartial(evt.partial, evt.requestId);
-          console.log("===>In partial=> " + evt.partial + " " + evt.requestId)
+      // Capture subscriptions so we can remove them later individually
+      const partialSubscription = eventEmitter.addListener(
+        "onPartialResponse",
+        (evt) => {
+          if (evt.requestId === requestId) {
+            onPartial(evt.partial, evt.requestId);
+            console.log(
+              "===>In partial=> " + evt.partial + " " + evt.requestId
+            );
+          }
         }
-          
-          
-      });
-      eventEmitter.addListener("onErrorResponse", (evt) => {
-        if (evt.requestId === requestId) onError(evt.error, evt.requestId);
-      });
+      );
+
+      const errorSubscription = eventEmitter.addListener(
+        "onErrorResponse",
+        (evt) => {
+          if (evt.requestId === requestId) onError(evt.error, evt.requestId);
+        }
+      );
 
       const p = NativeLlmMediapipe.generateResponse(requestId, prompt);
 
       // cleanup
       p.finally(() => {
-        eventEmitter.removeAllListeners("onPartialResponse");
-        eventEmitter.removeAllListeners("onErrorResponse");
+        partialSubscription.remove()
+        errorSubscription.remove()
       });
 
       return p;
