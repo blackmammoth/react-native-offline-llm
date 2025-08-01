@@ -23,14 +23,11 @@ class LlmInferenceModel(
     private val topK: Int = 40,
     private val temperature: Float = 0.7f,
     private val randomSeed: Int = 0,
-    private var inferenceListener: InferenceListener? = null
 ) {
 
     private val llmInference: LlmInference
     private var session: LlmInferenceSession
     private var requestId: Int = 0
-
-    private var requestContent: String = ""
 
     init {
         val modelFile = File(context.filesDir, "gemma3-1b-it-int4.task")
@@ -63,33 +60,31 @@ class LlmInferenceModel(
     }
 
     /**
-     * Registers a listener for inference callbacks.
-     */
-    fun setInferenceListener(listener: InferenceListener) {
-        inferenceListener = listener
-    }
-
-    /**
      * Launches an async generation of the given prompt.
      */
-    fun generateResponseAsync(requestId: Int, prompt: String, promise: Promise) {
+    fun generateResponseAsync(requestId: Int, prompt: String,     onPartial: (String) -> Unit,
+    onError: (String) -> Unit,
+    onComplete: (String) -> Unit) {
+        var requestContent: String = ""
         this.requestId = requestId
+
         session.addQueryChunk(prompt)
-        session.generateResponseAsync { partialResult, done ->
+        
+        session.generateResponseAsync { partial, done ->
             if (!done) {
-                inferenceListener?.onResults(this, requestId, partialResult)
-                requestContent += partialResult
+                onPartial(partial)
+                // Incrementally build the response
+                requestContent += partial
             } else {
-                // Final result received
-                // inferenceListener?.onResults(this, requestId, partialResult)
+                // Final bit received
+                onComplete(requestContent + partial)
                 Log.d("LlmTest", "/// Request $requestId completed with response: $requestContent ///")
-                promise.resolve(requestContent)
             }
         }
     }
 
     /**
-     * Resets the LLM session, clearing prior context.
+     * Closes the LLM session, clearing prior context.
      */
     fun closeSession() {
         session.close()
@@ -102,18 +97,4 @@ class LlmInferenceModel(
     fun stopResponse() {
         session.cancelGenerateResponseAsync()
     }
-}
-
-/**
- * Listener for receiving inference events.
- */
-interface InferenceListener {
-    /** Called for incremental (partial) results. */
-    fun logging(model: LlmInferenceModel, message: String)
-
-    /** Called upon an error during inference. */
-    fun onError(model: LlmInferenceModel, requestId: Int, error: String)
-
-    /** Called when final response is ready. */
-    fun onResults(model: LlmInferenceModel, requestId: Int, response: String)
 }

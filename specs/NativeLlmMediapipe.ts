@@ -1,5 +1,6 @@
 import type { TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
+import { generateResponseType } from '../lib/types';
 
 /** 
  * Interface matching the native Kotlin module "LlmInferenceModule". 
@@ -31,7 +32,7 @@ export interface Spec extends TurboModule {
    * @param requestId Unique request identifier.
    * @param prompt    The text prompt to send.
    */
-  generateResponse(requestId: number, prompt: string): Promise<void>;
+  generateResponse(requestId: number, prompt: string): Promise<generateResponseType>;
 
   /**
    * Subscribes to native events.

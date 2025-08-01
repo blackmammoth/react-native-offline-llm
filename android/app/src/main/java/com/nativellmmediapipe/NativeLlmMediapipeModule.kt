@@ -22,40 +22,6 @@ class NativeLlmMediapipeModule(private val reactContext: ReactApplicationContext
 
   override fun getName() = NAME
 
-  private class InferenceModelListener(
-    private val module: NativeLlmMediapipeModule,
-  ) : InferenceListener {
-    override fun logging(model: LlmInferenceModel, message: String) {
-      module.emitEvent(
-        "logging",
-        Arguments.createMap().apply {
-          this.putString("message", message)
-        }
-      )
-    }
-
-    override fun onError(model: LlmInferenceModel, requestId: Int, error: String) {
-      module.emitEvent(
-        "onErrorResponse",
-        Arguments.createMap().apply {
-          this.putInt("requestId", requestId)
-          this.putString("error", error)
-        }
-      )
-    }
-
-    override fun onResults(model: LlmInferenceModel, requestId: Int, response: String) {
-      module.emitEvent(
-        // Todo: change response name to onResponseCompletion
-        "onPartialResponse",
-        Arguments.createMap().apply {
-          this.putInt("requestId", requestId)
-          this.putString("response", response)
-        }
-      )
-    }
-  }
-
   override fun createModel(
     maxTokens: Double,
     topK: Double,
@@ -78,7 +44,6 @@ class NativeLlmMediapipeModule(private val reactContext: ReactApplicationContext
           topK.toInt(),
           temperature.toFloat(),
           randomSeed.toInt(),
-          inferenceListener = InferenceModelListener(this)
         )
         Log.d("LlmTest", "***New Model Created!***")
       promise.resolve("Model Creation Successful")
@@ -96,7 +61,39 @@ class NativeLlmMediapipeModule(private val reactContext: ReactApplicationContext
   }
 
   override fun generateResponse(requestId: Double, prompt: String, promise: Promise) {
-    llmInferenceModel?.generateResponseAsync(requestId.toInt(), prompt, promise)
+    val id = requestId.toInt()
+    if (llmInferenceModel == null) {
+      promise.reject("E_NO_MODEL", "LLM model is not initialized")
+      return
+    }
+
+    // Wrap listener callbacks to tie into this one promise
+    llmInferenceModel?.generateResponseAsync(id, prompt, 
+      onPartial = { partial ->
+        emitEvent("onPartialResponse", Arguments.createMap().apply {
+          putInt("requestId", id)
+          putString("partial", partial)
+        })
+      },
+      onError = { errorMsg ->
+        // Emit event and reject the promise if it hasn’t resolved yet
+        emitEvent("onErrorResponse", Arguments.createMap().apply {
+          putInt("requestId", id)
+          putString("error", errorMsg)
+        })
+        promise.reject("E_INFERENCE", errorMsg)
+      },
+      onComplete = { fullResponse ->
+        emitEvent("onCompleteResponse", Arguments.createMap().apply {
+          putInt("requestId", id)
+          putString("response", fullResponse)
+        })
+
+        promise.resolve(Arguments.createMap().apply {
+          putInt("requestId", id)
+          putString("response", fullResponse)
+        })
+      })
   }
 
   override fun addListener(eventName: String?) {
