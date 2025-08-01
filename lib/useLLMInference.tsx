@@ -26,7 +26,7 @@ export default function useLLMInference() {
       console.log("LLM session closed");
       setIsLoaded(false);
     };
-  }, [isLoaded]);
+  }, []);
 
   // ? Is there use for the call back here?
   const generateResponse = useCallback(
@@ -35,10 +35,15 @@ export default function useLLMInference() {
       onPartial: (partial: string, requestId: number) => void,
       onError: (error: string, requestId: number) => void
     ): Promise<generateResponseType> => {
-      const requestId = Date.now();
+      const requestId = 1
 
       eventEmitter.addListener("onPartialResponse", (evt) => {
-        if (evt.requestId === requestId) onPartial(evt.partial, evt.requestId);
+        if (evt.requestId === requestId) {
+          onPartial(evt.partial, evt.requestId);
+          console.log("===>In partial=> " + evt.partial + " " + evt.requestId)
+        }
+          
+          
       });
       eventEmitter.addListener("onErrorResponse", (evt) => {
         if (evt.requestId === requestId) onError(evt.error, evt.requestId);

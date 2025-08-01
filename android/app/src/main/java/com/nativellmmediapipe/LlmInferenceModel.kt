@@ -28,6 +28,7 @@ class LlmInferenceModel(
     private val llmInference: LlmInference
     private var session: LlmInferenceSession
     private var requestId: Int = 0
+    private var requestContent: String = ""
 
     init {
         val modelFile = File(context.filesDir, "gemma3-1b-it-int4.task")
@@ -65,7 +66,6 @@ class LlmInferenceModel(
     fun generateResponseAsync(requestId: Int, prompt: String,     onPartial: (String) -> Unit,
     onError: (String) -> Unit,
     onComplete: (String) -> Unit) {
-        var requestContent: String = ""
         this.requestId = requestId
 
         session.addQueryChunk(prompt)
@@ -79,6 +79,7 @@ class LlmInferenceModel(
                 // Final bit received
                 onComplete(requestContent + partial)
                 Log.d("LlmTest", "/// Request $requestId completed with response: $requestContent ///")
+                requestContent = "" // Reset for next request
             }
         }
     }
