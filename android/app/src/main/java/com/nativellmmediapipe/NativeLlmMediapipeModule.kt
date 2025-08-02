@@ -11,6 +11,7 @@ import com.facebook.react.modules.core.DeviceEventManagerModule
 import java.io.File
 import java.io.FileOutputStream
 
+import android.os.Debug
 import android.util.Log
 
 import com.nativellmmediapipe.NativeLlmMediapipeSpec
@@ -22,6 +23,12 @@ class NativeLlmMediapipeModule(private val reactContext: ReactApplicationContext
 
   override fun getName() = NAME
 
+  private fun logNativeHeap(tag: String) {
+  val used = Debug.getNativeHeapAllocatedSize()
+  Log.d("LlmMemTest", "$tag ⇒ ${used / (1024 * 1024)} MB")
+}
+
+
   override fun createModel(
     maxTokens: Double,
     topK: Double,
@@ -29,16 +36,14 @@ class NativeLlmMediapipeModule(private val reactContext: ReactApplicationContext
     randomSeed: Double,
     promise: Promise
   ) {
-
-  if (llmInferenceModel != null) {
-    Log.d("LlmTest", "Model already created")
-    promise.resolve("Model already created")
-    return
-  }
-
     try {
-      llmInferenceModel =
-        LlmInferenceModel(
+      // Log memory usage before creating the model
+      logNativeHeap("BEFORE createModel")
+
+      // Close existing model if it exists
+      llmInferenceModel?.closeEngine()
+
+      llmInferenceModel = LlmInferenceModel(
           this.reactContext,
           maxTokens.toInt(),
           topK.toInt(),
@@ -46,6 +51,8 @@ class NativeLlmMediapipeModule(private val reactContext: ReactApplicationContext
           randomSeed.toInt(),
         )
         Log.d("LlmTest", "***New Model Created!***")
+
+      logNativeHeap("AFTER createModel")
       promise.resolve("Model Creation Successful")
     } catch (e: Exception) {
       promise.reject("Model Creation Failed", e.localizedMessage)
@@ -56,8 +63,25 @@ class NativeLlmMediapipeModule(private val reactContext: ReactApplicationContext
   // close session instead of releasing model
   override fun closeSession(promise: Promise) {
     llmInferenceModel?.closeSession()
-    llmInferenceModel = null // Help GC reclaim the object
     promise.resolve(true)
+  }
+
+  override fun closeEngine(promise: Promise) {
+    try {
+
+    logNativeHeap("BEFORE closeEngine")
+
+
+          llmInferenceModel?.closeEngine()
+    llmInferenceModel = null
+
+    logNativeHeap("AFTER closeEngine")
+    promise.resolve(true)
+    } catch (e: Exception) {
+      Log.e("LlmTest", "Failed to close the LLM Inference engine: ${e.message}")
+      promise.reject("E_INFERENCE", "Failed to close the LLM Inference engine: ${e.message}")
+    }
+
   }
 
   override fun generateResponse(requestId: Double, prompt: String, promise: Promise) {
@@ -104,13 +128,15 @@ class NativeLlmMediapipeModule(private val reactContext: ReactApplicationContext
     /* Required for RN built-in Event Emitter Calls. */
   }
 
-  override fun onCatalystInstanceDestroy() {
-  llmInferenceModel?.apply {
-    closeSession()        // Close the Mediapipe session
-    // If LlmInference has a close() or release() method, call it here too
-  }
-  llmInferenceModel = null // Help GC reclaim the object
-  super.onCatalystInstanceDestroy()
+  // close engine on invalidate
+  override fun invalidate() {
+    try {
+      llmInferenceModel?.closeEngine()
+      Log.d("LlmTest", "LLM Inference engine has been closed successfully.")
+    } catch (e: Exception) {
+      Log.e("LlmTest", "Failed to close the LLM Inference engine: ${e.message}")
+      throw Exception("Failed to close the LLM Inference engine: ${e.message}")
+    }
 }
 
   private fun copyFileToInternalStorageIfNeeded(modelName: String, context: Context): File {

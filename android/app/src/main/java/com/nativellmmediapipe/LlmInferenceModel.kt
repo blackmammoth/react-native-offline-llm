@@ -25,39 +25,32 @@ class LlmInferenceModel(
     private val randomSeed: Int = 0,
 ) {
 
-    private val llmInference: LlmInference
+    private var llmInference: LlmInference
     private var session: LlmInferenceSession
     private var requestId: Int = 0
     private var requestContent: String = ""
 
-    init {
-        val modelFile = File(context.filesDir, "gemma3-1b-it-int4.task")
-        val modelPath = modelFile.absolutePath
+   init {
+    val modelFile = File(context.filesDir, "gemma3-1b-it-int4.task")
+    require(modelFile.exists()) { "Model file not found at ${modelFile.path}" }
+    val options = LlmInference.LlmInferenceOptions.builder()
+      .setModelPath(modelFile.absolutePath)
+      .setMaxTokens(maxTokens)
+      .setPreferredBackend(LlmInference.Backend.GPU)
+      .build()
+    llmInference = LlmInference.createFromOptions(context, options)
+    session = buildSession(llmInference)
+    Log.d("LlmTest", "Initialized…")
+  }
 
-        // Ensure model file exists
-        require(modelFile.exists()) { "Model file not found at $modelPath" }
-        
-        // Build engine options
-        val optionsBuilder = LlmInference.LlmInferenceOptions.builder()
-            .setModelPath(modelPath)
-            .setMaxTokens(maxTokens)
-            .setPreferredBackend(LlmInference.Backend.GPU)
-
-        val options = optionsBuilder.build()
-
-        // Create engine and initial session
-        llmInference = LlmInference.createFromOptions(context, options)
-        session = buildSession()
-        Log.d("LlmInferenceModel", "Initialized LLM session with model: $modelPath")
-    }
-
-    private fun buildSession(): LlmInferenceSession {
+    private fun buildSession(engine: LlmInference): LlmInferenceSession {
         val sessionOptions = LlmInferenceSession.LlmInferenceSessionOptions.builder()
             .setTopK(topK)
             .setTopP(0.9f)
             .setTemperature(temperature)
             .build()
-        return LlmInferenceSession.createFromOptions(llmInference, sessionOptions)
+        Log.d("LlmTest", "Session built with options: $sessionOptions")
+        return LlmInferenceSession.createFromOptions(engine, sessionOptions)
     }
 
     /**
@@ -88,9 +81,48 @@ class LlmInferenceModel(
      * Closes the LLM session, clearing prior context.
      */
     fun closeSession() {
-        session.close()
-        Log.d("LlmTest", "Session reset")
+            try {
+      session.close()
+      Log.d("LlmTest", "Session has been reset successfully.")
+    } catch (e: Exception) {
+      Log.e("LlmTest", "Failed to close the LLM Inference session: ${e.message}")
+      throw Exception("Failed to close the LLM Inference session: ${e.message}")
     }
+        
+    }
+
+    /**
+      *  Close the LLM session and LLM Inference engine altogether.
+     */
+     fun closeEngine() {
+
+        try {
+            
+        closeSession()
+        llmInference.close()
+        Log.d("LlmTest", "LLM Inference session and engine CLOSED.")
+        } catch (e: Exception) {
+      Log.e("LlmTest", "Failed to close the LLM Inference engine: ${e.message}")
+      throw Exception("Failed to close the LLM Inference engine: ${e.message}")
+    }
+     }
+
+    /**
+    * Reset the model instance to allow for a fresh session
+     */
+
+     fun resetSession() {
+        try {
+            closeSession()
+            // Rebuild the session with the same engine
+            session = buildSession(llmInference)
+            Log.d("LlmTest", "LLM session RESET successfully.")
+        } catch (e: Exception) {
+            Log.e("LlmTest", "Failed to reset the LLM Inference session: ${e.message}")
+            throw Exception("Failed to reset the LLM Inference session: ${e.message}")
+        }
+
+     }
 
     /**
      * Stops current inference if running.
@@ -98,4 +130,21 @@ class LlmInferenceModel(
     fun stopResponse() {
         session.cancelGenerateResponseAsync()
     }
+
+    // companion object {
+    // @Volatile private var instance: LlmInferenceModel? = null
+
+    // /**  
+    //  * Thread-safe lazy getter for the single model.  
+    //  */
+    // fun getInstance(
+    //   context: Context,
+    //   maxTokens: Int = 256,
+    //   topK: Int = 40,
+    //   temperature: Float = 0.7f,
+    //   randomSeed: Int = 0
+    // ): LlmInferenceModel {
+    //   return instance
+    // }
+// }
 }

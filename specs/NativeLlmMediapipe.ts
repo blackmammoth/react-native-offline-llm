@@ -1,9 +1,9 @@
-import type { TurboModule } from 'react-native';
-import { TurboModuleRegistry } from 'react-native';
-import { generateResponseType } from '../lib/types';
+import type { TurboModule } from "react-native";
+import { TurboModuleRegistry } from "react-native";
+import { generateResponseType } from "../lib/types";
 
-/** 
- * Interface matching the native Kotlin module "LlmInferenceModule". 
+/**
+ * Interface matching the native Kotlin module "LlmInferenceModule".
  */
 export interface Spec extends TurboModule {
   /**
@@ -18,7 +18,7 @@ export interface Spec extends TurboModule {
     maxTokens: number,
     topK: number,
     temperature: number,
-    randomSeed: number,
+    randomSeed: number
   ): Promise<string>;
 
   /**
@@ -28,11 +28,20 @@ export interface Spec extends TurboModule {
   closeSession(): Promise<boolean>;
 
   /**
+   * Closes the LLM Inference Engine
+   * @returns Resolves to `true` when the session is closed.
+   */
+  closeEngine(): Promise<boolean>;
+
+  /**
    * Sends a prompt to the model.
    * @param requestId Unique request identifier.
    * @param prompt    The text prompt to send.
    */
-  generateResponse(requestId: number, prompt: string): Promise<generateResponseType>;
+  generateResponse(
+    requestId: number,
+    prompt: string
+  ): Promise<generateResponseType>;
 
   /**
    * Subscribes to native events.
@@ -49,9 +58,7 @@ export interface Spec extends TurboModule {
   removeListeners(count: number): void;
 }
 
-/** 
+/**
  * Retrieves the native module instance, throwing if unavailable.
  */
-export default TurboModuleRegistry.getEnforcing<Spec>(
-  'NativeLlmMediapipe'
-);
+export default TurboModuleRegistry.getEnforcing<Spec>("NativeLlmMediapipe");

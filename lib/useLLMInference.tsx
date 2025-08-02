@@ -22,7 +22,6 @@ export default function useLLMInference() {
       });
 
     return () => {
-      NativeLlmMediapipe.closeSession();
       console.log("LLM session closed");
       setIsLoaded(false);
     };

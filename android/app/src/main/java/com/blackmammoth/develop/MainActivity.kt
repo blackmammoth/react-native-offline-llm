@@ -11,16 +11,32 @@ import com.facebook.react.defaults.DefaultReactActivityDelegate
 
 import expo.modules.ReactActivityDelegateWrapper
 
+import com.nativellmmediapipe.LlmInferenceModel
+
 class MainActivity : ReactActivity() {
+
+  private var llmInferenceModel: LlmInferenceModel? = null
+
+
   override fun onCreate(savedInstanceState: Bundle?) {
     // Set the theme to AppTheme BEFORE onCreate to support
     // coloring the background, status bar, and navigation bar.
     // This is required for expo-splash-screen.
     setTheme(R.style.AppTheme);
     super.onCreate(null)
-    Log.d("LlmTest", "===JOB BEGAN===")
-    // testLlmModel()
   }
+
+override fun onDestroy() {
+  super.onDestroy()
+  if (isFinishing) {
+    // llmInferenceModel = LlmInferenceModel.getInstance(this)
+
+    // llmInferenceModel?.closeSession()
+    // llmInferenceModel?.closeEngine()
+    Log.d("LlmTest", "LLM engine closed on app exit")
+  }
+}
+
 
     /**
      * A simple test function to verify LLM inference.
