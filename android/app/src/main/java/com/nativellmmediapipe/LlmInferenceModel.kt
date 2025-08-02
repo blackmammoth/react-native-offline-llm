@@ -23,20 +23,30 @@ class LlmInferenceModel(
     private val topK: Int = 40,
     private val temperature: Float = 0.7f,
     private val randomSeed: Int = 0,
+    private val accelerator: String = "GPU"
 ) {
 
     private var llmInference: LlmInference
     private var session: LlmInferenceSession
     private var requestId: Int = 0
     private var requestContent: String = ""
+    private var preferredBackend: LlmInference.Backend = LlmInference.Backend.GPU
 
    init {
     val modelFile = File(context.filesDir, "gemma3-1b-it-int4.task")
     require(modelFile.exists()) { "Model file not found at ${modelFile.path}" }
+
+    if (accelerator == "CPU") {
+      preferredBackend = LlmInference.Backend.CPU
+      Log.d("LlmTest", "Using CPU for inference")
+    } else {
+      Log.d("LlmTest", "Using GPU for inference")
+    }
+
     val options = LlmInference.LlmInferenceOptions.builder()
       .setModelPath(modelFile.absolutePath)
       .setMaxTokens(maxTokens)
-      .setPreferredBackend(LlmInference.Backend.GPU)
+      .setPreferredBackend(preferredBackend)
       .build()
     llmInference = LlmInference.createFromOptions(context, options)
     session = buildSession(llmInference)

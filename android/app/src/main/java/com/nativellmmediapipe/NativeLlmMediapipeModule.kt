@@ -34,6 +34,7 @@ class NativeLlmMediapipeModule(private val reactContext: ReactApplicationContext
     topK: Double,
     temperature: Double,
     randomSeed: Double,
+    accelerator: String,
     promise: Promise
   ) {
     try {
@@ -49,6 +50,7 @@ class NativeLlmMediapipeModule(private val reactContext: ReactApplicationContext
           topK.toInt(),
           temperature.toFloat(),
           randomSeed.toInt(),
+          accelerator
         )
         Log.d("LlmTest", "***New Model Created!***")
 

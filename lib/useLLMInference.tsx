@@ -12,7 +12,7 @@ export default function useLLMInference() {
     if (isLoaded) return;
 
     // Todo: Add option for custom model loading parameters
-    NativeLlmMediapipe.createModel(512, 40, 0.8, 0)
+    NativeLlmMediapipe.createModel(512, 40, 0.8, 0, "CPU")
       .then(() => {
         setIsLoaded(true);
         console.log("LLM model loaded successfully");

@@ -18,7 +18,8 @@ export interface Spec extends TurboModule {
     maxTokens: number,
     topK: number,
     temperature: number,
-    randomSeed: number
+    randomSeed: number,
+    accelerator: string
   ): Promise<string>;
 
   /**
