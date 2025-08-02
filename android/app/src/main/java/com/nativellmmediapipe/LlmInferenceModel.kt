@@ -82,6 +82,7 @@ class LlmInferenceModel(
      */
     fun closeSession() {
             try {
+      session.cancelGenerateResponseAsync()
       session.close()
       Log.d("LlmTest", "Session has been reset successfully.")
     } catch (e: Exception) {
@@ -123,28 +124,4 @@ class LlmInferenceModel(
         }
 
      }
-
-    /**
-     * Stops current inference if running.
-     */
-    fun stopResponse() {
-        session.cancelGenerateResponseAsync()
-    }
-
-    // companion object {
-    // @Volatile private var instance: LlmInferenceModel? = null
-
-    // /**  
-    //  * Thread-safe lazy getter for the single model.  
-    //  */
-    // fun getInstance(
-    //   context: Context,
-    //   maxTokens: Int = 256,
-    //   topK: Int = 40,
-    //   temperature: Float = 0.7f,
-    //   randomSeed: Int = 0
-    // ): LlmInferenceModel {
-    //   return instance
-    // }
-// }
 }

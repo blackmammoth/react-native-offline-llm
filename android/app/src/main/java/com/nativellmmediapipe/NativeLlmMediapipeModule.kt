@@ -25,7 +25,7 @@ class NativeLlmMediapipeModule(private val reactContext: ReactApplicationContext
 
   private fun logNativeHeap(tag: String) {
   val used = Debug.getNativeHeapAllocatedSize()
-  Log.d("LlmMemTest", "$tag ⇒ ${used / (1024 * 1024)} MB")
+  Log.d("LlmTest", "$tag ⇒ ${used / (1024 * 1024)} MB")
 }
 
 
@@ -71,9 +71,7 @@ class NativeLlmMediapipeModule(private val reactContext: ReactApplicationContext
 
     logNativeHeap("BEFORE closeEngine")
 
-
-          llmInferenceModel?.closeEngine()
-    llmInferenceModel = null
+    llmInferenceModel?.closeEngine()
 
     logNativeHeap("AFTER closeEngine")
     promise.resolve(true)
