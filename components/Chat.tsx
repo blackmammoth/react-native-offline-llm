@@ -139,7 +139,7 @@ const Chat: React.FC<ChatProps> = ({ generateResponse }) => {
           <TouchableOpacity
             onPress={handleSend}
             style={styles.sendButton}
-            // disabled={loading}
+            disabled={loading}
           >
             {loading ? (
               <Ionicons name="hourglass" size={24} color="#888" />
