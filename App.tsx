@@ -6,6 +6,9 @@ import Chat from "./components/Chat";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function App(): JSX.Element {
+  // TODO: Strip code to only necessary parts
+  // TODO: Format android modules part
+  // TODO: Push to Github
   const { isLoaded, generateResponse } = useLLMInference({
     maxTokens: 512,
     topK: 40,
@@ -33,7 +36,6 @@ export default function App(): JSX.Element {
   );
 }
 
-// Define your stylesheet with proper typing
 interface Styles {
   container: ViewStyle;
 }
