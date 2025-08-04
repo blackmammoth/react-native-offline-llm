@@ -47,3 +47,8 @@ android/.kotlin/
 *.task
 
 model/
+
+# BFG Files
+*.bfg
+..bfg-report
+bfg.jar
