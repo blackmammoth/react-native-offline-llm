@@ -20,15 +20,17 @@ interface Message {
   sender: "user" | "bot";
 }
 
-type LLM = {
-  generateResponse: (
-    prompt: string,
-    onPartial?: (partial: string, timestampId: number | undefined) => void,
-    onError?: (message: string, timestampId: number | undefined) => void
-  ) => Promise<string>;
-};
+type GenerateResponseType = (
+  prompt: string,
+  onPartial: (partial: string, requestId: number) => void,
+  onError: (error: string, requestId: number) => void
+) => Promise<any>;
 
-const Chat: React.FC = ({ generateResponse }: LLM) => {
+interface ChatProps {
+  generateResponse: GenerateResponseType;
+}
+
+const Chat: React.FC<ChatProps> = ({ generateResponse }) => {
   const insets = useSafeAreaInsets();
 
   const [messages, setMessages] = useState<Message[]>([]);
