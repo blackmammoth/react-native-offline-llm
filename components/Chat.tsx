@@ -23,8 +23,8 @@ interface Message {
 type LLM = {
   generateResponse: (
     prompt: string,
-    onPartial?: (partial: string, requestId: number | undefined) => void,
-    onError?: (message: string, requestId: number | undefined) => void
+    onPartial?: (partial: string, timestampId: number | undefined) => void,
+    onError?: (message: string, timestampId: number | undefined) => void
   ) => Promise<string>;
 };
 
@@ -35,54 +35,57 @@ const Chat: React.FC = ({ generateResponse }: LLM) => {
   const [prompt, setPrompt] = useState("");
   const flatListRef = useRef<FlatList<Message>>(null);
 
-  const [partial, setPartial] = useState("");
-  const [finalText, setFinalText] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSend = async () => {
     const text = prompt.trim();
     if (!text) return;
 
-    // Reset
-    setPartial("");
-    setFinalText(null);
-    setError(null);
+    const timestampId = Date.now().toString();
+
+    // Add the user’s message, then a bot **placeholder**
+    setMessages((prev) => [
+      ...prev,
+      { id: timestampId + "-u", text: prompt, sender: "user" },
+      { id: timestampId, text: "", sender: "bot" },
+    ]);
+
+    setPrompt("");
     setLoading(true);
 
     try {
-      const result = await generateResponse(
+      await generateResponse(
         text,
         // Callback to handle partial responses
-        (newPartial, requestId) => {
-          setPartial((prev) => prev + newPartial);
+        (newPartial) => {
+          // route each partial chunk into the right message
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === timestampId
+                ? { ...msg, text: msg.text + newPartial }
+                : msg
+            )
+          );
         },
-        (message, requestId) => {
-          setError(message);
-          setLoading(false);
+        (errMessage) => {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === timestampId
+                ? { ...msg, text: `[Error] ${errMessage}` }
+                : msg
+            )
+          );
         }
       );
-
-      setFinalText(result);
     } catch (err) {
-      setError("Failed to generate response");
       console.error("Error generating response:", err);
     } finally {
       setLoading(false);
     }
 
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      text,
-      sender: "user",
-    };
-    setMessages((prev) => [...prev, newMessage]);
-    setPrompt("");
     // Scroll to bottom after new message
-    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 50);
   };
-
-  console.log("Partial response:", partial);
 
   return (
     <KeyboardAvoidingView
@@ -91,22 +94,38 @@ const Chat: React.FC = ({ generateResponse }: LLM) => {
       keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
     >
       <SafeAreaView style={styles.innerContainer}>
-        <View style={styles.messagesContainer}>
-          {/* placeholder only if no messages AND no streaming in progress */}
-          {messages.length === 0 && !partial && (
-            <View style={styles.placeholderContainer}>
-              <Text style={styles.placeholderText}>
-                Incoming messages will appear here....
-              </Text>
-            </View>
-          )}
-
-          {partial !== "" && (
-            <View style={styles.messageBubble}>
-              <Text style={styles.messageText}>{partial}</Text>
-            </View>
-          )}
-        </View>
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(msg) => msg.id}
+          contentContainerStyle={styles.messagesContainer}
+          // automatically scroll when content changes
+          onContentSizeChange={() =>
+            flatListRef.current?.scrollToEnd({ animated: true })
+          }
+          renderItem={({ item }) => {
+            const isUser = item.sender === "user";
+            return (
+              <View
+                style={[
+                  styles.messageBubble,
+                  isUser ? styles.userBubble : styles.botBubble,
+                ]}
+              >
+                <Text style={styles.messageText}>{item.text}</Text>
+              </View>
+            );
+          }}
+          ListEmptyComponent={() =>
+            !loading ? (
+              <View style={styles.placeholderContainer}>
+                <Text style={styles.placeholderText}>
+                  Incoming messages will appear here…
+                </Text>
+              </View>
+            ) : null
+          }
+        />
 
         <View style={[styles.inputContainer, { paddingBottom: insets.bottom }]}>
           <TextInput
@@ -115,8 +134,16 @@ const Chat: React.FC = ({ generateResponse }: LLM) => {
             onChangeText={setPrompt}
             placeholder="Type your prompt here..."
           />
-          <TouchableOpacity onPress={handleSend} style={styles.sendButton}>
-            <Ionicons name="send" size={24} color="#007AFF" />
+          <TouchableOpacity
+            onPress={handleSend}
+            style={styles.sendButton}
+            // disabled={loading}
+          >
+            {loading ? (
+              <Ionicons name="hourglass" size={24} color="#888" />
+            ) : (
+              <Ionicons name="send" size={24} color="#007AFF" />
+            )}
           </TouchableOpacity>
         </View>
       </SafeAreaView>

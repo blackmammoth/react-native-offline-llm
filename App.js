@@ -8,12 +8,12 @@ export default function App() {
   const { isLoaded, generateResponse } = useLLMInference();
   // // Todo: Prepare a text input field for user to enter text and a button to submit the text and a box to get the response
   // // // Todo: Use loading spinner to indicate model loading
-  // TODO: BUG: On reloading the app, the model doesn't generate responses.
+  // TODO: BUG: On reloading the app, the model doesn't generate responses. Seems to occur only on the GPU Case. I'm almost sure it can be fixed by using a delay
   // // Todo: Do I even need promises for this stuff? If not, then remove them. If needed, make the promises more consistent
   // // Todo: There are multiple listeners being fired. Fix
   // // Todo: In the first run, only the final response is recieved with no streaming. In the second run and after, streaming works.
   // // Todo: close session of the model when the user exits the app
-  // Todo: Add an option for selecting GPU or CPU for inference
+  // // Todo: Add an option for selecting GPU or CPU for inference
   
   
   if (!isLoaded) {
@@ -35,7 +35,6 @@ export default function App() {
   // // Right now, the apk is taking small ram (around 1.6 GB) but as I refresh the session, the total ram available seems to decrease even though the app is not using that much ram.
   
   // Todo: What are the purposes of the request Ids? Make them non constant
-
 
   // Todo: Strip down the code to only the necessary parts for the app to run
 

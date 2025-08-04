@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { NativeEventEmitter } from "react-native";
 import NativeLlmMediapipe from "../specs/NativeLlmMediapipe";
 import { generateResponseType } from "./types";
@@ -6,6 +6,7 @@ import { generateResponseType } from "./types";
 const eventEmitter = new NativeEventEmitter(NativeLlmMediapipe);
 
 export default function useLLMInference() {
+  const requestIdRef = useRef(0);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -34,7 +35,13 @@ export default function useLLMInference() {
       onPartial: (partial: string, requestId: number) => void,
       onError: (error: string, requestId: number) => void
     ): Promise<generateResponseType> => {
-      const requestId = 1;
+      // We need the IDs because they allow us to subscribe to different prompts individually.
+      // If we can guarantee that only one instance of generateResponse would execute at a time,
+      // we could safely remove the requestIds. But the user of the library may decide to generate
+      // many responses at the same time, in which case, we would need to track the requestId. This requestId
+      // is entirely independent from the requestId in the Chat component UI.
+
+      const requestId = ++requestIdRef.current;
 
       // Capture subscriptions so we can remove them later individually
       const partialSubscription = eventEmitter.addListener(
@@ -42,9 +49,6 @@ export default function useLLMInference() {
         (evt) => {
           if (evt.requestId === requestId) {
             onPartial(evt.partial, evt.requestId);
-            console.log(
-              "===>In partial=> " + evt.partial + " " + evt.requestId
-            );
           }
         }
       );
@@ -60,8 +64,9 @@ export default function useLLMInference() {
 
       // cleanup
       p.finally(() => {
-        partialSubscription.remove()
-        errorSubscription.remove()
+        // This would remove the listener only associated with the particular requestId
+        partialSubscription.remove();
+        errorSubscription.remove();
       });
 
       return p;
