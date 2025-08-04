@@ -5,7 +5,13 @@ import Chat from "./components/Chat";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function App() {
-  const { isLoaded, generateResponse } = useLLMInference();
+  const { isLoaded, generateResponse } = useLLMInference({
+    maxTokens: 512,
+    topK: 40,
+    temperature: 0.8,
+    randomSeed: 0,
+    accelerator: 'CPU'
+  });
   // // Todo: Prepare a text input field for user to enter text and a button to submit the text and a box to get the response
   // // // Todo: Use loading spinner to indicate model loading
   // TODO: BUG: On reloading the app, the model doesn't generate responses. Seems to occur only on the GPU Case. I'm almost sure it can be fixed by using a delay
@@ -34,13 +40,14 @@ export default function App() {
   // // to happen again if I prompt the model again and again
   // // Right now, the apk is taking small ram (around 1.6 GB) but as I refresh the session, the total ram available seems to decrease even though the app is not using that much ram.
   
-  // Todo: What are the purposes of the request Ids? Make them non constant
+  // // Todo: What are the purposes of the request Ids? Make them non constant
+  // // Todo: Add config options for the model, like temperature, top_p, etc.
 
   // Todo: Strip down the code to only the necessary parts for the app to run
 
-  // Todo: Find a way to send multiple messages
+  // // Todo: Find a way to send multiple messages
 
-  // Todo: Add config options for the model, like temperature, top_p, etc.
+
   // // Todo: Add error handling for model loading and response generations
 
   // // Todo: Polish code and replace with typescript

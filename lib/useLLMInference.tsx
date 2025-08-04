@@ -5,15 +5,34 @@ import { generateResponseType } from "./types";
 
 const eventEmitter = new NativeEventEmitter(NativeLlmMediapipe);
 
-export default function useLLMInference() {
+export default function useLLMInference(
+  modelConfig: {
+    maxTokens: number;
+    topK: number;
+    temperature: number;
+    randomSeed: number;
+    accelerator: "CPU" | "GPU";
+  } = {
+    maxTokens: 512,
+    topK: 40,
+    temperature: 0.8,
+    randomSeed: 0,
+    accelerator: "CPU",
+  }
+) {
   const requestIdRef = useRef(0);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     if (isLoaded) return;
 
-    // Todo: Add option for custom model loading parameters
-    NativeLlmMediapipe.createModel(512, 40, 0.8, 0, "CPU")
+    NativeLlmMediapipe.createModel(
+      modelConfig.maxTokens,
+      modelConfig.topK,
+      modelConfig.temperature,
+      modelConfig.randomSeed,
+      modelConfig.accelerator
+    )
       .then(() => {
         setIsLoaded(true);
         console.log("LLM model loaded successfully");

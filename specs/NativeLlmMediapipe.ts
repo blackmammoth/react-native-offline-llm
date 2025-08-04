@@ -12,6 +12,7 @@ export interface Spec extends TurboModule {
    * @param topK       Sampling top‑k.
    * @param temperature Sampling temperature.
    * @param randomSeed Random seed for reproducibility.
+   * @param accelerator Set the accelerator to either GPU/CPU
    * @returns          Resolves to a success message.
    */
   createModel(
