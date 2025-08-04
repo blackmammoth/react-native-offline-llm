@@ -44,5 +44,6 @@ android/.kotlin/
 
 # Model files
 *.bin
+*.task
 
 model/
